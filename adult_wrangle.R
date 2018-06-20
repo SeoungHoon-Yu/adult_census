@@ -1,27 +1,27 @@
 # ad_train <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",sep = ",",strip.white = TRUE)
 # ad_test <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test",sep = ",", skip = 1)
 
-setwd("D:/승훈/Data/R 스터디/2018 미니프로젝트")
-
-pkgs <- c("tidyverse","readxl")
+pkgs <- c('dplyr','data.table','stringr')
 sapply(pkgs,require,character.only = TRUE)
 
-# write.csv(ad_train,"adult_train2.csv")
-# write.csv(ad_test,"adult_test.csv")
-adult <- read.csv("adult_train.csv",stringsAsFactors = FALSE)
+setwd("D:/승훈/Data/R 스터디/2018 미니프로젝트/data")
+train <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",data.table = FALSE) 
+test <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test",skip = 1,data.table = FALSE)
+
+adult <- rbind(train,test) 
+remove(train,test)
 
 glimpse(adult)
-colnames(adult) <- c("id","age","workclass","fnlwgt","education",
+colnames(adult) <- c("age","workclass","fnlwgt","education",
                      "education_num","martial_status","occupation",
                      "relationship","race","sex","capital_gain",
                      "capital_loss","hours_per_week","native_country",
                      "income_condition")
 
-for(i in c(3,5,7:11,15,16)){
-  adult[,i] <- str_replace_all(adult[,i],"[:space:]","")
-}
-
-summary(adult)
+adult[,c(c(2,4,6:10,14,15))] <- apply(adult[,c(2,4,6:10,14,15)],2,
+                                      function(x)str_replace_all(x,'[:space:]',''))
+adult[,15] <- str_replace_all(adult[,15],'[.]','')
+unique(adult[,15])
 
 # change "?" into NA.
 adult$workclass <- gsub("?", NA, adult$workclass, fixed = T)
