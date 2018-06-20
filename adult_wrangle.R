@@ -1,6 +1,3 @@
-# ad_train <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",sep = ",",strip.white = TRUE)
-# ad_test <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test",sep = ",", skip = 1)
-
 pkgs <- c('dplyr','data.table','stringr')
 sapply(pkgs,require,character.only = TRUE)
 
