@@ -1,4 +1,4 @@
-pkgs <- c('dplyr','data.table','stringr')
+pkgs <- c('dplyr','data.table','stringr','ggplot2')
 sapply(pkgs,require,character.only = TRUE)
 
 setwd("D:/승훈/Data/R 스터디/2018 미니프로젝트/data")
@@ -21,24 +21,33 @@ adult[,15] <- str_replace_all(adult[,15],'[.]','')
 unique(adult[,15])
 
 # change "?" into NA.
-adult$workclass <- gsub("?", NA, adult$workclass, fixed = T)
-adult$native_country <- gsub("?", NA, adult$native_country, fixed = T)
-adult$occupation <- gsub("?", NA, adult$occupation, fixed = T)
+adult[,c(2,7,14)] <- apply(adult[,c(2,7,14)],2,function(x)
+                        str_replace_all(x,'[?]','missing'))
 
 # age ####
-adult$age2 <- ifelse(adult$age %in% 17:25,"young",
-              ifelse(adult$age %in% 26:60,"working_age",
-              ifelse(adult$age %in% 60:90,"old","error")))
-adult$age2 <- factor(adult$age2, levels = c("young","working_age","old"))
-table(adult$age2)
+adult$age2 <- ifelse(adult$age %in% 16:24,"age_a",
+              ifelse(adult$age %in% 25:34,"age_b",
+              ifelse(adult$age %in% 35:44,"age_c",
+              ifelse(adult$age %in% 45:54,"age_d",
+              ifelse(adult$age %in% 55:64,"age_e",
+              ifelse(adult$age %in% 65:90,"age_d","error"))))))
+adult$age2 <- factor(adult$age2)
 
 # age2 visualization ####
-# workclass ####
+ggplot(adult,aes(factor(age2),group = factor(income_condition),
+                              fill = factor(income_condition))) + geom_bar() +
+  xlab('Age_group') + ylab('Frequency') +
+  scale_fill_discrete(name = 'Income',
+                    labels = c('under_50k','over_50k'))
 
+# workclass ####
 # grouping
-adult$work_group <- ifelse(adult$workclass == "Private","Private",
-               ifelse(!is.na(adult$workclass),"Others","error")) 
-table(adult$work_group)
+# private or not
+adult$if_private <- ifelse(adult$workclass == "Private","Private",
+                    ifelse(endsWith(adult$workclass,''))) 
+table(endsWith(adult$workclass,'gov'))
+
+table(adult$if_private)
 
 # three group visualization ####
 
