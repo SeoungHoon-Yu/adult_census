@@ -41,36 +41,31 @@ ggplot(adult,aes(factor(age2),group = factor(income_condition),
                     labels = c('under_50k','over_50k'))
 
 # workclass ####
-# grouping
+# visualize by default group
+ggplot(adult,aes(factor(workclass),group = factor(income_condition),
+                                   fill = factor(income_condition))) + geom_bar()
+
+# group by four
+adult$work <- ifelse(adult$workclass == "Private","Private",
+              ifelse(endsWith(adult$workclass,'gov'),'gov',
+              ifelse(adult$workclass == 'missing','missing','others'))) 
+adult$work <- factor(adult$work)
+
 # private or not
-adult$if_private <- ifelse(adult$workclass == "Private","Private",
-                    ifelse(endsWith(adult$workclass,''))) 
-table(endsWith(adult$workclass,'gov'))
+adult$if_private <- ifelse(adult$workclass == 'Private','Private','not_Private')
+adult$if_private <- factor(adult$if_private)
 
-table(adult$if_private)
+# education to korean version
+adult$educated <- ifelse(adult$education_num %in% c(1:6),'elementary',
+                  ifelse(adult$education_num %in% c(7:9),'middle',
+                  ifelse(adult$education_num %in% c(10:12),'high',
+                  ifelse(adult$education_num %in% c(13:16),'college','error'))))
+adult$educated <- factor(adult$educated,levels = c('elementary','middle',
+                                                   'high','college'))
 
-# three group visualization ####
-
-# education
-# making dictionary
-edu_num <- data.frame(table(adult$education_num))
-edu_txt <- data.frame(table(adult$education))
-edu_dic <- left_join(edu_txt,edu_num,by = c("Freq" = "Freq")) %>%
-  arrange(Var1.y)
-
-adult$education <- factor(adult$education, levels = edu_dic$Var1.x)
-adult$edu_group <- ifelse(adult$education %in% edu_dic$Var1.x[1:8],"School_uncomplete",
-                   ifelse(adult$education %in% edu_dic$Var1.x[9],"HS-grad",
-                   ifelse(adult$education %in% edu_dic$Var1.x[10],"Some-college",
-                   ifelse(adult$education %in% edu_dic$Var1.x[11:13],"college graduated",
-                   ifelse(adult$education %in% edu_dic$Var1.x[14:16],"post college","error")))))
-
-adult$edu_group <- factor(adult$edu_group,
-                          levels = c("School_uncomplete", "HS-grad", "Some-college",
-                                     "college graduated", "post college"))
-remove(edu_num, edu_txt)
-
-# income_condition group by new education group ####
+# visualize new education
+ggplot(adult,aes(educated),group = factor(income_condition),
+                            fill = factor(income_condition)) + geom_bar()
 
 # martial status.
 # 배우자와 같이 사는가 살지 않는가? ####
