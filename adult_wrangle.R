@@ -1,12 +1,13 @@
 pkgs <- c('dplyr','data.table','stringr','ggplot2')
 sapply(pkgs,require,character.only = TRUE)
 
-setwd("D:/승훈/Data/R 스터디/2018 미니프로젝트/data")
-train <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",data.table = FALSE) 
-test <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test",skip = 1,data.table = FALSE)
+#train <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",data.table = FALSE) 
+#test <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test",skip = 1,data.table = FALSE)
+#adult <- rbind(train,test) 
+#remove(train,test)
+#write.csv(adult,'D:/github_desktop/adult_census/adult_census/adult.csv',row.names = FALSE)
 
-adult <- rbind(train,test) 
-remove(train,test)
+adult <- read.csv('D:/github_desktop/adult_census/adult_census/adult.csv')
 
 glimpse(adult)
 colnames(adult) <- c("age","workclass","fnlwgt","education",
@@ -17,7 +18,8 @@ colnames(adult) <- c("age","workclass","fnlwgt","education",
 
 adult[,c(c(2,4,6:10,14,15))] <- apply(adult[,c(2,4,6:10,14,15)],2,
                                       function(x)str_replace_all(x,'[:space:]',''))
-adult[,15] <- str_replace_all(adult[,15],'[.]','')
+adult[,15] <- ifelse(str_detect(adult[,15],'>'),'over_50k','under_50k') %>%
+  factor(.,levels = c('under_50k','over_50k'))
 unique(adult[,15])
 
 # change "?" into NA.
