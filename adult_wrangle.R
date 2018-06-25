@@ -16,15 +16,15 @@ colnames(adult) <- c("age","workclass","fnlwgt","education",
                      "capital_loss","hours_per_week","native_country",
                      "income_condition")
 
+# change "?" into NA.
+adult[,c(2,7,14)] <- apply(adult[,c(2,7,14)],2,function(x)
+  str_replace_all(x,'[?]','missing'))
+
 adult[,c(c(2,4,6:10,14,15))] <- apply(adult[,c(2,4,6:10,14,15)],2,
                                       function(x)str_replace_all(x,'[:space:]',''))
 adult[,15] <- ifelse(str_detect(adult[,15],'>'),'over_50k','under_50k') %>%
   factor(.,levels = c('under_50k','over_50k'))
 unique(adult[,15])
-
-# change "?" into NA.
-adult[,c(2,7,14)] <- apply(adult[,c(2,7,14)],2,function(x)
-                        str_replace_all(x,'[?]','missing'))
 
 # age ####
 adult$age2 <- ifelse(adult$age %in% 16:24,"age_a",
