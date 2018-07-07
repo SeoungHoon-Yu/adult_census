@@ -21,7 +21,7 @@ adult[,c(2,7,14)] <- apply(adult[,c(2,7,14)],2,function(x)
   str_replace_all(x,'[?]','missing'))
 
 adult[,c(c(2,4,6:10,14,15))] <- apply(adult[,c(2,4,6:10,14,15)],2,
-                     function(x)str_replace_all(x,'[:space:]','')) %>%
+                     function(x)str_replace_all(x,'[:space:]',''))
          
 adult[,15] <- ifelse(str_detect(adult[,15],'>'),'over_50k','under_50k') %>%
   factor(.,levels = c('under_50k','over_50k'))
@@ -37,22 +37,29 @@ adult$age2 <- ifelse(adult$age %in% 16:24,"age_a",
 adult$age2 <- factor(adult$age2)
 
 # age2 visualization ####
-ggplot(adult,aes(factor(age2),group = factor(income_condition),
-                              fill = factor(income_condition))) + geom_bar() +
+ggplot(adult,aes(age2,group = factor(income_condition),
+                      fill = factor(income_condition))) +
+  geom_bar(position = 'fill') +
   xlab('Age_group') + ylab('Frequency') +
-  scale_fill_discrete(name = 'Income',
-                    labels = c('under_50k','over_50k'))
-
+  scale_fill_discrete(name = 'Income')
+  
 # workclass ####
 # visualize by default group
-ggplot(adult,aes(factor(workclass),group = factor(income_condition),
-                                   fill = factor(income_condition))) + geom_bar()
+ggplot(adult,aes(workclass,group = income_condition,
+                           fill  = income_condition)) +
+  geom_bar(position = 'fill') +
+  scale_fill_discrete(name = 'income')
 
 # group by four
 adult$work <- ifelse(adult$workclass == "Private","Private",
               ifelse(endsWith(adult$workclass,'gov'),'gov',
-              ifelse(adult$workclass == 'missing','missing','others'))) 
+              ifelse(endsWith(adult$workclass,'inc'),'inc',
+              ifelse(adult$workclass == 'missing','missing','others')))) 
 adult$work <- factor(adult$work)
+
+# vis
+ggplot(adult,aes(work,group = income_condition,
+                       fill = income_condition)) + geom_bar(position = 'fill')
 
 # private or not
 adult$if_private <- ifelse(adult$workclass == 'Private','Private','not_Private')
@@ -67,18 +74,19 @@ adult$educated <- factor(adult$educated,levels = c('elementary','middle',
                                                    'high','college'))
 
 # visualize new education
-ggplot(adult,aes(educated),group = factor(income_condition),
-                            fill = factor(income_condition)) + geom_bar()
+ggplot(adult,aes(educated,group = income_condition,
+                          fill = income_condition)) +
+  geom_bar(position = 'fill')
 
 # martial status.
-# 배우자와 같이 사는가 살지 않는가? ####
+ggplot(adult,(aes(martial_status,group = income_condition,
+                                 fill = income_condition))) +
+  geom_bar(position = 'fill')
 
-tem <- data.frame(table(adult$martial_status))
-
-# with two group. ####
-adult$spouse <- ifelse(adult$martial_status %in% tem[2:4,1],
-                     "Have_spouse","No_spouse")
-adult$spouse <- factor(adult$spouse,levels = c("No_spouse","Have_spouse"))
+# with three group. ####
+adult$spouse <- ifelse(endsWith(adult$martial_status,'spouse'),
+                       'with_spouse','without_spouse')
+adult$spouse <- 
 
 # occupation ####
 tem <- adult %>% group_by(occupation,income_condition) %>%
