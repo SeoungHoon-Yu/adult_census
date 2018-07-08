@@ -99,7 +99,7 @@ tem2$portion <- sort(tem2$aa.x / (tem2$aa.x + tem2$aa.y))
 tem2$group <- rep(c('low_job','mid_job','hig_job'),each = 5)
 tem2 <- tem2[,c(1,7)]
 adult <- left_join(adult,tem2,by = 'occupation')
-adult$occupation <- factor(adult$occupation)
+adult$work <- factor(adult$group)
 remove(tem,tem2)
 
 # relationship ####
@@ -164,8 +164,9 @@ tem <- data.frame(Continent = c('MS','AS','EU','SA','AS',
                   Name = unique(test$native_country[is.na(test$Continent)]))
 a <- rbind(a,tem)
 adult <- left_join(adult,a,by = c('native_country' = 'Name'))
+adult$Continent <- factor(adult$Continent)
 remove(a,idx,tem,test)
 
-# write data
-#adult <- adult[,c(1,16,2,17:29)]
-#write.csv(adult,'D:/github_desktop/adult_census/adult_census/adult_final.csv')
+# write Rdata
+adult <- adult[,c(15,16,10,17:29)]
+save(adult,file = 'D:/github_desktop/adult_census/adult_census/data/adult.RData')
