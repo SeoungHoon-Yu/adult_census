@@ -145,8 +145,27 @@ table(adult$isusa)
 
 # 2. group by continent
 # continent data load.
+adult$native_country <- str_replace_all(adult$native_country,'-',' ')
 url <- 'https://country-code.cl/'
-a <- read_html(url) %>% html_node('')
+a <- read_html(url) %>% html_node('.tablesorter.mark') %>% html_table()
+idx <- t(sapply(a$Name,function(x)str_locate(x,'[:upper:]')))
+idx[,1] <- row.names(idx)
+row.names(idx) <- 1:nrow(idx)
+a[,3] <- str_sub(idx[,1],idx[,2],sapply(idx[,1],str_length))
+a[,1] <- str_replace_na(a[,1])
+a <- a[,c(1,3)]
+a[,2] <- gsub("(.*),.*", "//1", a[,2])
 
-# income_condition to factor
-adult$income_condition <- factor(adult$income_condition, levels = c("<=50K",">50K"))
+test <- left_join(adult,a,by = c('native_country' = 'Name'))
+
+# unmatch data.
+tem <- data.frame(Continent = c('missing','AS','EU','SA','AS',
+                                'EU','OC','EU','NA','AS','EU'),
+                  Name = unique(test$native_country[is.na(test$Continent)]))
+a <- rbind(a,tem)
+adult <- left_join(adult,a,by = c('native_country' = 'Name'))
+remove(a,idx,tem,test)
+
+# write data
+adult <- adult[,c(1,16,2,17:29)]
+write.csv(adult,'D:/github_desktop/adult_census/adult_census/adult_final.csv')
