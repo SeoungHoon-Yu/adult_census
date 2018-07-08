@@ -1,4 +1,5 @@
-pkgs <- c('dplyr','data.table','stringr','ggplot2')
+pkgs <- c('dplyr','data.table','stringr',
+          'ggplot2','rvest')
 sapply(pkgs,require,character.only = TRUE)
 
 #train <- fread("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",data.table = FALSE) 
@@ -86,25 +87,22 @@ ggplot(adult,(aes(martial_status,group = income_condition,
 # with three group. ####
 adult$spouse <- ifelse(endsWith(adult$martial_status,'spouse'),
                        'with_spouse','without_spouse')
-adult$spouse <- 
+adult$spouse <- factor(adult$spouse)
 
 # occupation ####
 tem <- adult %>% group_by(occupation,income_condition) %>%
   summarise(aa = n()) 
-tem2 <- merge(tem %>% filter(income_condition == ">50K"),
-              tem %>% filter(income_condition == "<=50K"),
+tem2 <- merge(tem %>% filter(income_condition == "over_50k"),
+              tem %>% filter(income_condition == "under_50k"),
               by = c("occupation" = "occupation"))
-tem2$x.por <- tem2$aa.x / (tem2$aa.x + tem2$aa.y)
-tem2$y.por <- tem2$aa.y / (tem2$aa.x + tem2$aa.y)
-tem2 <- tem2[order(tem2$x.por),]
-adult$job_group <- ifelse(adult$occupation %in% tem2$occupation[c(1:3,5:8)],"lower",
-                          ifelse(adult$occupation %in% tem2$occupation[c(9:15)],"medium",
-                                 ifelse(is.na(adult$occupation),"upper","error")))
-adult$job_group <- factor(adult$job_group,levels = c("lower","medium","upper"))
+tem2$portion <- sort(tem2$aa.x / (tem2$aa.x + tem2$aa.y))
+tem2$group <- rep(c('low_job','mid_job','hig_job'),each = 5)
+tem2 <- tem2[,c(1,7)]
+adult <- left_join(adult,tem2,by = 'occupation')
+adult$occupation <- factor(adult$occupation)
+remove(tem,tem2)
 
 # relationship ####
-tem <- data.frame(table(adult$relationship))
-
 adult$live_with <- ifelse(adult$relationship %in% c("Husband","Wife"),"Two",
                     ifelse(adult$relationship == "Own-child","Own_child","Alone"))
 adult$live_with <- factor(adult$live_with, levels = c("Alone","Two","Own_child"))
@@ -139,45 +137,16 @@ adult$isloss <- factor(adult$isloss, levels = c("No_loss","loss"))
 adult$labor_oecd <- ifelse(adult$hours_per_week < 38.5,"lower","higher")
 adult$labor_oecd <- factor(adult$labor_oecd, levels = c("lower","higher"))
 
-adult$labor_medi <- ifelse(adult$hours_per_week == 40,"median",
-                    ifelse(between(adult$hours_per_week,1,39),"lower",
-                    ifelse(adult$hours_per_week > 40,"higher","error")))
-adult$labor_medi <- factor(adult$labor_medi,levels = c("lower","median","higher"))
-
 # native_country
 # 1. usa or not
-tem <- data.frame(table(adult$native_country))
-colnames(tem) <- c("country","freq")
-tem$country <- as.character(tem$country)
 adult$isusa <- ifelse(adult$native_country == "United-States","USA","Not_USA")
 adult$isusa <- factor(adult$isusa,levels = c("Not_USA","USA"))
 table(adult$isusa)
 
 # 2. group by continent
 # continent data load.
-continent_info <- read.csv("D:/승훈/Data/Olympic analysis/ddd/country_conti.csv",
-                           header = FALSE, stringsAsFactors = FALSE)
-continent_info <- continent_info[,c(2,5)]
-colnames(continent_info) <- c("Region","Country")
-
-continent_info <- separate(continent_info,Region,into = c("region"),sep = " & ")
-table(tem$country %in% continent_info$Country)
-con_join <- left_join(tem,continent_info, by = c("country" = "Country"))
-
-table(is.na(con_join$region))
-
-# fill na.
-con_join$region[is.na(con_join$region)] <- 
-    c("Latin America","Latin America","Latin America","Europe","Europe",
-      "Asia","Asia","Asia","Latin America","Latin America","Europe",
-      "Asia","Asia","Latin America","North America","Europe")
-
-con_join$region <- ifelse(endsWith(con_join$region,"Asia"),
-                          "Asia",con_join$region)
-
-adult <- left_join(adult,con_join, by = c("native_country" = "country"))
-adult <- adult[,!(names(adult) %in% c("freq","Freq"))]
-adult$region <- factor(adult$region)
+url <- 'https://country-code.cl/'
+a <- read_html(url) %>% html_node('')
 
 # income_condition to factor
 adult$income_condition <- factor(adult$income_condition, levels = c("<=50K",">50K"))
