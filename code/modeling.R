@@ -59,9 +59,9 @@ md_knn <- kknn(income_condition~.,train,test,
 pr_knn <- md_knn$fitted.values
 
 # test dataset performance
-perf_knn <- perf(pr_knn,test$income_condition)
+(perf_knn <- perf(pr_knn,test$income_condition))
 
-# 2. decision tree
+# 2. decision tree ####
 # min_criterion = 0.5 through caret package.
 tra <- data.frame(
 min_criterion = rep(0.5,12),
@@ -87,13 +87,54 @@ md_tree <- ctree(income_condition ~., data = train,controls = ctree_control(minc
                                                                          minsplit = tra[1,2],
                                                                          maxdepth = tra[1,3]))
 pr_tree <- predict(tree,test)
-perf_tree <- perf(pre,test$income_condition)
+(perf_tree <- perf(pr_tree,test$income_condition))
 plot(md_tree)
 
 # ROC curve
+library(ROCR)
 res <- treeresponse(md_tree,test)
 res <- 1-unlist(res, use.names=F)[seq(1,nrow(test)*2,2)]
 res.rocr <- prediction(res,test$income_condition)
 res.perf <- performance(res.rocr,'tpr','fpr')
 plot(res.perf,col = 2,lwd = 3)
 lines(x = c(0,1),y = c(0,1),lwd = 2)
+
+# 3. naive bayes ####
+library(e1071)
+md_naive <- naiveBayes(income_condition ~., data = train)
+pr_naive <- predict(md_naive,test,type = 'class')
+(perf_naive <- perf(pr_naive,test$income_condition))
+
+# 4. logistic regression ####
+# full variable
+md_glm_full <- glm(income_condition ~.,family = binomial,data = train)
+summary(md_glm_full)
+pr_glm_full <- predict(md_glm_full,valid,type = 'response')
+pr_glm_full <- ifelse(pr_glm_full > 0.5,1,0)
+(perf_glm_full <- perf(pr_glm_full,valid$income_condition))
+
+# selected variable backward
+md_glm_back <- step(md_glm_full,direction = 'backward')
+summary(md_glm_back)
+pr_glm_back <- predict(md_glm_back,valid[,names(md_glm_back$data)],type = 'response')
+pr_glm_back <- ifelse(pr_glm_back > 0.5,1,0)
+(perf_glm_back <- perf(pr_glm_back,valid$income_condition))
+
+# selected variable both
+md_glm_both <- step(md_glm_full,direction = 'both')
+summary(md_glm_both)
+pr_glm_both <- predict(md_glm_both,valid[,names(md_glm_both$data)],type = 'response')
+pr_glm_both <- ifelse(pr_glm_both > 0.5,1,0)
+(perf_glm_both <- perf(pr_glm_both,valid$income_condition))
+
+# selected variable forward
+md_glm_forw <- step(md_glm_full,direction = 'forward')
+summary(md_glm_forw)
+pr_glm_forw <- predict(md_glm_forw,valid[,names(md_glm_forw$data)],type = 'response')
+pr_glm_forw <- ifelse(pr_glm_both > 0.5,1,0)
+(perf_glm_forw <- perf(pr_glm_forw,valid$income_condition))
+
+# 5. neuralnet ####
+
+
+
