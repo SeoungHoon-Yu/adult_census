@@ -8,7 +8,7 @@ sapply(pkgs,require,character.only = TRUE)
 #remove(train,test)
 #write.csv(adult,'D:/github_desktop/adult_census/adult_census/adult.csv',row.names = FALSE)
 
-adult <- read.csv('D:/github_desktop/adult_census/adult_census/adult.csv')
+adult <- read.csv('D:/github_desktop/adult_census/adult_census/data/adult.csv')
 
 glimpse(adult)
 colnames(adult) <- c("age","workclass","fnlwgt","education",
@@ -154,12 +154,12 @@ row.names(idx) <- 1:nrow(idx)
 a[,3] <- str_sub(idx[,1],idx[,2],sapply(idx[,1],str_length))
 a[,1] <- str_replace_na(a[,1])
 a <- a[,c(1,3)]
-a[,2] <- gsub("(.*),.*", "//1", a[,2])
+a[,2] <- gsub("(.*),.*", "\\1", a[,2])
 
 test <- left_join(adult,a,by = c('native_country' = 'Name'))
 
 # unmatch data.
-tem <- data.frame(Continent = c('missing','AS','EU','SA','AS',
+tem <- data.frame(Continent = c('MS','AS','EU','SA','AS',
                                 'EU','OC','EU','NA','AS','EU'),
                   Name = unique(test$native_country[is.na(test$Continent)]))
 a <- rbind(a,tem)
@@ -167,5 +167,5 @@ adult <- left_join(adult,a,by = c('native_country' = 'Name'))
 remove(a,idx,tem,test)
 
 # write data
-adult <- adult[,c(1,16,2,17:29)]
-write.csv(adult,'D:/github_desktop/adult_census/adult_census/adult_final.csv')
+#adult <- adult[,c(1,16,2,17:29)]
+#write.csv(adult,'D:/github_desktop/adult_census/adult_census/adult_final.csv')
