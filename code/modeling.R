@@ -102,27 +102,29 @@ pr_glm_full <- ifelse(pr_glm_full > 0.5,1,0)
 # selected variable backward
 md_glm_back <- step(md_glm_full,direction = 'backward')
 summary(md_glm_back)
-pr_glm_back <- predict(md_glm_back,valid[,names(md_glm_back$data)],type = 'response')
-pr_glm_back <- ifelse(pr_glm_back > 0.5,1,0)
+pr_glm_back <- predict(md_glm_back,valid,type = 'response')
+pr_glm_back <- ifelse(pr_glm_back >= 0.5,1,0)
 (perf_glm_back <- perf(pr_glm_back,valid$income_condition))
-
-# selected variable both
-md_glm_both <- step(md_glm_full,direction = 'both')
-summary(md_glm_both)
-pr_glm_both <- predict(md_glm_both,valid[,names(md_glm_both$data)],type = 'response')
-pr_glm_both <- ifelse(pr_glm_both > 0.5,1,0)
-(perf_glm_both <- perf(pr_glm_both,valid$income_condition))
-
-# selected variable forward
-md_glm_forw <- step(md_glm_full,direction = 'forward')
-summary(md_glm_forw)
-pr_glm_forw <- predict(md_glm_forw,valid[,names(md_glm_forw$data)],type = 'response')
-pr_glm_forw <- ifelse(pr_glm_both > 0.5,1,0)
-(perf_glm_forw <- perf(pr_glm_forw,valid$income_condition))
-
-# all same
-rbind(perf_glm_full, perf_glm_back, perf_glm_both, perf_glm_forw)
 
 # 5. neuralnet ####
 # find best parameter
 library(nnet)
+aa <- list()
+for(i in 1:10){
+  md <- nnet(income_condition ~.,
+             data = train,size = i,decay = 5e-4, maxit = 500)
+  pre <- predict(md,valid)
+  pre <- ifelse(pre > 0.5,1,0)
+  aa[[i]] <- perf(pre,valid$income_condition)
+}
+aa <- rbindlist(aa) %>% data.frame()
+
+
+trc <- trainControl(method = 'cv',
+                    number = '10')
+md_neur_caret <- train(income_condition~.,data = train,method = 'nnet')
+md_neur_nnet <- nnet(income_condition ~.,
+                   data = train,size = 5,decay = 5e-4,maxit = 500)
+
+pre_caret <- predict(md_neur_caret,valid)
+pre_nnet <- predict(md_neur_nnet,valid,type = 'class')
