@@ -18,7 +18,13 @@ ggplot(adult,aes(sex,
   xlab('Sex') + ylab('Frequency') +
   theme(legend.position = 'none')
 
-ggplot(adult,aes(if_private,
+ggplot(adult,aes(sex,
+                 fill = labor_oecd)) +
+  geom_bar(position = 'fill') +
+  scale_fill_manual(values=c('#999999','#EEAD0E')) +
+  xlab('Sex') + ylab('Frequency')
+
+  ggplot(adult,aes(if_private,
        fill = income_condition)) +
   geom_bar(position = 'identity') +
   scale_fill_manual(values=c('#999999','#56B4E9')) +
@@ -35,7 +41,7 @@ ggplot(adult,aes(educated,
 ggplot(adult,aes(live_with,
        fill = income_condition)) +
   geom_bar(position = 'fill') +
-  scale_fill_brewer(palette = 'Dark2') +
+  scale_fill_manual(values=c('#999999','#56B4E9')) +
   ylab('Frequency') + theme(legend.position = 'null')
 
 ggplot(adult,aes(if_white,
