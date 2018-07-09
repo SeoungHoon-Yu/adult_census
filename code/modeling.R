@@ -1,21 +1,21 @@
-pkgs <- c('dplyr','caret','data.table')
+pkgs <- c('dplyr','caret','data.table',
+          'rlist')
 sapply(pkgs,require,character.only = TRUE)
 
 load('D:/github_desktop/adult_census/adult_census/data/adult.RData')
 colnames(adult) <- colnames(adult) %>% tolower()
 
 adult$income_condition <- (as.numeric(adult$income_condition)-1) %>% as.factor()
-adult <- adult[,-12]
-adult$group <- as.factor(adult$group)
 
 # custom function ####
+# dummy
 dum <- function(x,name = 'dummy'){
   uni <- length(unique(x))
   a <- matrix(nrow = length(x),ncol = uni)
   for(i in 1:uni){
     a[,i] <- ifelse(x == unique(x)[i],1,0)
   }
-  assign(paste0('dummy_',name),a,envir = .GlobalEnv)
+  return(a)
 }
 
 # 0 to 1
@@ -53,7 +53,7 @@ train.y <- adult$income_condition[idx == 'train']
 library(kknn)
 knntr <- train.kknn(income_condition ~.,train,kmax = 15,distance = 2,kernel = 'rectangular')
 
-# knn best k = 12
+# knn best k = 14
 md_knn <- kknn(income_condition~.,train,test,
                k = knntr$best.parameters$k,kernel = 'rectangular',distance = 2)
 pr_knn <- md_knn$fitted.values
@@ -62,31 +62,16 @@ pr_knn <- md_knn$fitted.values
 (perf_knn <- perf(pr_knn,test$income_condition))
 
 # 2. decision tree ####
-# min_criterion = 0.5 through caret package.
-tra <- data.frame(
-min_criterion = rep(0.5,12),
-min_split = rep(c(10, 30, 50, 100),each = 3),
-max_depth = rep(c(0, 10, 5),4))
-tretr <- list()
+# min_criterion = 0.01 through caret package.
+library(party)
+trc <- trainControl(method = 'cv',number = 10,
+                    verboseIter = TRUE)
+tmd <- train(income_condition~.,data = train,
+             trControl = trc,method = 'ctree')
 
-for(i in 1:12){
-    cat("CART Min criterion:", tra[i,1], ", Min split:", tra[i,2], 
-        ", Max depth:", tra[i,3], "\n")
-      
-    tmp_control = ctree_control(mincriterion = tra[i,1], 
-                                  minsplit = tra[i,2], maxdepth = tra[i,3])
-    tmp_tree <- ctree(income_condition ~ ., data = train, controls = tmp_control)
-    tmp_tree_pre <- predict(tmp_tree,valid)
-    tretr[[i]] <- perf(tmp_tree_pre,valid$income_condition)
-    }
-tem <- rbindlist(tretr) %>% data.frame()
-
-# best 
-# 0.5, 10, 0
-md_tree <- ctree(income_condition ~., data = train,controls = ctree_control(mincriterion = 0.5,
-                                                                         minsplit = tra[1,2],
-                                                                         maxdepth = tra[1,3]))
-pr_tree <- predict(tree,test)
+md_tree <- ctree(income_condition ~., data = train,
+                 controls = ctree_control(mincriterion = 0.01))
+pr_tree <- predict(md_tree,test)
 (perf_tree <- perf(pr_tree,test$income_condition))
 plot(md_tree)
 
@@ -102,6 +87,7 @@ lines(x = c(0,1),y = c(0,1),lwd = 2)
 # 3. naive bayes ####
 library(e1071)
 md_naive <- naiveBayes(income_condition ~., data = train)
+
 pr_naive <- predict(md_naive,test,type = 'class')
 (perf_naive <- perf(pr_naive,test$income_condition))
 
@@ -134,7 +120,9 @@ pr_glm_forw <- predict(md_glm_forw,valid[,names(md_glm_forw$data)],type = 'respo
 pr_glm_forw <- ifelse(pr_glm_both > 0.5,1,0)
 (perf_glm_forw <- perf(pr_glm_forw,valid$income_condition))
 
+# all same
+rbind(perf_glm_full, perf_glm_back, perf_glm_both, perf_glm_forw)
+
 # 5. neuralnet ####
-
-
-
+# find best parameter
+library(nnet)

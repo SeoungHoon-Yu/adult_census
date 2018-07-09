@@ -99,7 +99,7 @@ tem2$portion <- sort(tem2$aa.x / (tem2$aa.x + tem2$aa.y))
 tem2$group <- rep(c('low_job','mid_job','hig_job'),each = 5)
 tem2 <- tem2[,c(1,7)]
 adult <- left_join(adult,tem2,by = 'occupation')
-adult$work <- factor(adult$group)
+adult$group <- factor(adult$group)
 remove(tem,tem2)
 
 # relationship ####
@@ -118,14 +118,6 @@ adult$sex <- factor(adult$sex, levels = c("Male","Female"))
 # 1. 0인가 0이 아닌가 - isgain ####
 adult$isgain <- ifelse(adult$capital_gain == 0,"No_gain","gain")
 adult$isgain <- factor(adult$isgain, levels = c("No_gain","gain"))
-
-# 2. 0 ~ 100만 ~ 1000만 ~ - gain_three ####
-adult$gain_three <- ifelse(adult$capital_gain == 0,"No gain",
-                     ifelse(between(adult$capital_gain,1,10000),
-                            "Medium gain","Higer gain"))
-
-adult$gain_three <- factor(adult$gain_three, 
-                      levels = c("No gain","Medium gain","Higer gain"))
 
 # capital_loss
 adult$isloss <- ifelse(adult$capital_loss == 0,"No_loss","loss")
@@ -168,5 +160,5 @@ adult$Continent <- factor(adult$Continent)
 remove(a,idx,tem,test)
 
 # write Rdata
-adult <- adult[,c(15,16,10,17:29)]
+adult <- adult[,c(15,16,10,17:20,22:28)]
 save(adult,file = 'D:/github_desktop/adult_census/adult_census/data/adult.RData')
