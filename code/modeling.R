@@ -95,16 +95,16 @@ pr_naive <- predict(md_naive,test,type = 'class')
 # full variable
 md_glm_full <- glm(income_condition ~.,family = binomial,data = train)
 summary(md_glm_full)
-pr_glm_full <- predict(md_glm_full,valid,type = 'response')
+pr_glm_full <- predict(md_glm_full,test,type = 'response')
 pr_glm_full <- ifelse(pr_glm_full > 0.5,1,0)
-(perf_glm_full <- perf(pr_glm_full,valid$income_condition))
+(perf_glm_full <- perf(pr_glm_full,test$income_condition))
 
 # selected variable backward
 md_glm_back <- step(md_glm_full,direction = 'backward')
 summary(md_glm_back)
-pr_glm_back <- predict(md_glm_back,valid,type = 'response')
+pr_glm_back <- predict(md_glm_back,test,type = 'response')
 pr_glm_back <- ifelse(pr_glm_back >= 0.5,1,0)
-(perf_glm_back <- perf(pr_glm_back,valid$income_condition))
+(perf_glm_back <- perf(pr_glm_back,test$income_condition))
 
 # 5. neuralnet ####
 # find best parameter
@@ -126,5 +126,5 @@ md_neur_caret <- train(income_condition~.,data = train,method = 'nnet')
 md_neur_nnet <- nnet(income_condition ~.,
                    data = train,size = 5,decay = 5e-4,maxit = 500)
 
-pre_caret <- predict(md_neur_caret,valid)
-pre_nnet <- predict(md_neur_nnet,valid,type = 'class')
+pre_caret <- predict(md_neur_caret,test)
+pre_nnet <- predict(md_neur_nnet,test,type = 'class')
