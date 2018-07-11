@@ -51,11 +51,13 @@ train.y <- adult$income_condition[idx == 'train']
 
 # 1. knn ####
 library(kknn)
-knntr <- train.kknn(income_condition ~.,train,kmax = 15,distance = 2,kernel = 'rectangular')
+knntr <- train.kknn(income_condition ~.,train,kmax = 15,
+                    distance = 2,kernel = 'rectangular')
 
 # knn best k = 14
 md_knn <- kknn(income_condition~.,train,test,
-               k = knntr$best.parameters$k,kernel = 'rectangular',distance = 2)
+               k = knntr$best.parameters$k,kernel = 'rectangular',
+               distance = 2)
 pr_knn <- md_knn$fitted.values
 
 # test dataset performance
